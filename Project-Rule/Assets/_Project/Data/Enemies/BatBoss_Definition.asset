@@ -1,0 +1,107 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 44ae8e38655c9174889977edd694ec6e, type: 3}
+  m_Name: BatBoss_Definition
+  m_EditorClassIdentifier: RuleGame.Gameplay::RuleGame.Gameplay.Enemy.EnemyDefinition
+  Kind: 4
+  DisplayName: "\u6BDB\u7ED2\u8759\u8760\u9B54\u738B"
+  BodySize: {x: 2.5, y: 2.8}
+  Health: 300
+  Damage: 24
+  ContactDamage: 1
+  ContactInterval: 0.4
+  ContactPadding: 0.05
+  Energy: 100
+  EnergyRegen: 2
+  RuleAttribute: 0
+  RuleRelation: 1
+  MoveSpeed: 7.2
+  AttackRange: 5
+  AttackCooldown: 0.6
+  BossRestDuration: 0.35
+  ClockBeamVolleysBeforeRest: 2
+  BrickAdvanceDuration: 0.9
+  BrickAdvanceSpeedMultiplier: 2.2
+  BrickAdvanceCooldown: 4
+  BrickComboLimit: 2
+  ClockChargeDuration: 1.15
+  ClockChargeSpeedMultiplier: 3.5
+  ClockChargeCooldown: 7
+  ClockBeamWarning: 0.7
+  ClockBeamSpread: 14
+  RabbitBurrowDuration: 1
+  RabbitBurrowSpeedMultiplier: 2.8
+  RabbitBurrowCooldown: 5
+  RabbitEscapeDistance: 2.8
+  RabbitBurstCount: 2
+  RabbitBurstInterval: 0.35
+  PreferredDistance: 5
+  SpacingTolerance: 0.6
+  RangedRange: 15
+  RetreatSpeedMultiplier: 0.8
+  StaggerDamageThreshold: 60
+  StaggerResetDelay: 1.5
+  HurtCooldown: 5
+  BossHurtDuration: 0.18
+  GravityScale: 1
+  Flying: 1
+  FlightAcceleration: 36
+  BatOrbitDistance: 4.5
+  BatHoverHeight: 3
+  BatDashCooldown: 1.8
+  BatDashWindup: 0.4
+  BatDashDuration: 0.8
+  BatEvadeCooldown: 1.2
+  BatEvadeDuration: 0.45
+  BatRecoverDuration: 0.25
+  BatRestHeightRatio: 0.8
+  BatRestPatrolDistance: 2.5
+  BatRestSpeedMultiplier: 0.85
+  ImpactFraction: 0.6
+  RabbitCycle: 20
+  RabbitThrowInterval: 2
+  ClockHourInterval: 12
+  ClockCoreWindow: 3
+  ClockCoreHealth: 15
+  BatApproachSpeedMultiplier: 1.4
+  BatApproachDuration: 0.9
+  ProjectileLifetime: 7
+  BatApproachDistance: 3.6
+  BatVolleyWaves: 6
+  BatFanCount: 13
+  BatVolleyInterval: 0.18
+  BatFanSpread: 96
+  BatRingCount: 24
+  ProjectileBudget: 256
+  Timings:
+  - Action: Fly
+    Duration: 0.625
+  - Action: Hurt
+    Duration: 2
+  - Action: Slash
+    Duration: 1.75
+  - Action: Roar
+    Duration: 1.125
+  - Action: WingSpread
+    Duration: 2.875
+  - Action: Point
+    Duration: 2
+  - Action: Dash
+    Duration: 2.625
+  - Action: Shake
+    Duration: 2.25
+  - Action: Weak
+    Duration: 4.25
+  - Action: Dead
+    Duration: 1.625
+  - Action: Idle
+    Duration: 0.2

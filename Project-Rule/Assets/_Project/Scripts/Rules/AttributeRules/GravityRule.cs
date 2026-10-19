@@ -1,4 +1,5 @@
 using UnityEngine;
+using RuleGame.Infrastructure.Rules;
 
 namespace RuleGame.Core.Rules
 {
@@ -11,6 +12,9 @@ namespace RuleGame.Core.Rules
     /// </remarks>
     public class GravityRule : AttributeRuleBase
     {
+        /// <remarks>重力不需要属性管理器，但基类要求注入。</remarks>
+        public GravityRule(IAttributeManager attributes) : base(attributes) { }
+
         /// <summary>
         /// 工程里的默认重力。
         /// </summary>

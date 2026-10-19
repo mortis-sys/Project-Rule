@@ -3,37 +3,38 @@ using RuleGame.Infrastructure.Rules;
 namespace RuleGame.Core.Rules
 {
     /// <summary>
-    /// 属性规则类基类。7 个属性各实现一个。
+    /// 属性规则类基类。6 个属性各实现一个。
     /// </summary>
     /// <remarks>
     /// <para>基类**不设 AttributeId 属性** —— 类名本身就是标识。</para>
     /// <para>基类**不接收 RuleDef** —— 只接收关系枚举。</para>
     /// <para>基类**不持有计时器** —— 剩余时间由规则维护表持有。</para>
+    /// <para>基类**持有 <see cref="IAttributeManager"/>** —— 没有引擎全局载体的属性
+    /// （摩擦 / 质量 / 伤害）必须通过它写值。有全局载体的（重力 / 时间）拿到也不用。</para>
     /// </remarks>
     public abstract class AttributeRuleBase
     {
-        // ------------------------------------------------------------------
-        //  依赖：属性管理器
-        // ------------------------------------------------------------------
-
-        private IAttributeManager _attributes;
-
-        /// <summary>
-        /// 属性管理器：没有引擎全局载体的属性（摩擦 / 质量 / 伤害 / 关系 / 因果）写到这里。
-        /// </summary>
+        /// <summary>属性管理器。规则类通过它写属性值。</summary>
         /// <remarks>
-        /// ⚠️ 接口文档 v3.0 §2.3 的基类没有这个入口，但规则类要落地「写属性管理器」（见 §4.5）
-        /// 就必须拿到它。采用「由 <c>RuleSystem</c> 创建后注入」而非让规则类自己取单例，
-        /// 是为了保持规则类可单独测试。<b>待团队确认后并入冻结文档。</b>
+        /// 🔒 <b>构造函数注入（决策 2026-10-12）</b>：曾有一版用 <c>Bind()</c> 事后注入，
+        /// 已废弃 —— 构造函数注入让「忘了注入」变成编译错误，而不是运行时 NRE。
+        /// 子类必须写一行转发构造，用不到属性管理器的（重力）也照写。
         /// </remarks>
-        protected IAttributeManager Attributes => _attributes;
+        protected IAttributeManager Attributes { get; }
 
-        /// <summary>由 <c>RuleSystem</c> 在创建规则类后注入依赖。子类无需覆写。</summary>
-        internal void Bind(IAttributeManager attributes) => _attributes = attributes;
+        /// <param name="attributes">由 <c>RuleSystem</c> 注入，与它自己用的是同一个实例。</param>
+        protected AttributeRuleBase(IAttributeManager attributes)
+        {
+            Attributes = attributes ?? throw new System.ArgumentNullException(nameof(attributes));
+        }
 
         // ------------------------------------------------------------------
         //  五种关系算法
-        //  未定义的格位直接 return false（会被 RuleSystem 记为 Undefined）
+        //
+        //  返回 false = 「这个格位存在，但算法跑不通」→ RuleRequestStatus.NoResource。
+        //
+        //  ⚠️ 「格位在矩阵里不存在」是**另一回事**，由 IRuleCatalog.Get 返回 null 决定，
+        //  RuleSystem 在那一步就会返回 Undefined，根本走不到规则类。
         // ------------------------------------------------------------------
 
         protected abstract bool OnRevert();
@@ -65,6 +66,21 @@ namespace RuleGame.Core.Rules
 
         /// <summary>每帧维护。行为型规则（时间恒定 / 反转）覆写它。</summary>
         public virtual void Tick(float deltaTime) { }
+
+        /// <summary>
+        /// 按规则表当前状态<b>静默重施</b>效果。快照恢复后由 <c>RuleSystem.ReapplyActiveEffects()</c> 调用。
+        /// </summary>
+        /// <remarks>
+        /// <para>默认实现：槽位存在 → <see cref="Request"/> 一次（幂等写值）；槽位为空 → <see cref="Clear"/>。</para>
+        /// <para>⚠️ <b>行为型规则必须覆写</b>：时间规则的「反转」会执行一次回溯、
+        /// 「恒定」会 Pin 一张新快照 —— 直接 <c>Request</c> 会造成副作用。见 <c>TimeRule.Reapply</c>。</para>
+        /// <para>本方法**不触发任何事件**（事件由 <c>RuleSystem</c> 在 <c>Request</c> 路径上广播）。</para>
+        /// </remarks>
+        public virtual void Reapply(ActiveRule? slot)
+        {
+            if (slot.HasValue) Request(slot.Value.Relation);
+            else Clear();
+        }
 
         /// <summary>
         /// 规则到期 / 被覆盖 / 重开关卡时调用。

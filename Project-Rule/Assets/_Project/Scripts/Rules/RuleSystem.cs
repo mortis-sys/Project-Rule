@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using RuleGame.Infrastructure.Common;
 using RuleGame.Infrastructure.Rules;
 
 namespace RuleGame.Core.Rules
@@ -12,7 +13,7 @@ namespace RuleGame.Core.Rules
     /// <para>它**不认识能量，也不认识冷却**。费用检查与扣除在 <c>RuleReleaseService</c>。</para>
     /// <para>写入只能通过 <see cref="Request"/>，且必须经由 <c>RuleReleaseService</c>。</para>
     /// </remarks>
-    public class RuleSystem : IRuleSystem
+    public class RuleSystem : IRuleSystem, ITimeRewindControl
     {
         // ==================================================================
         //  单例
@@ -33,7 +34,24 @@ namespace RuleGame.Core.Rules
         public static void SetInstanceForTesting(RuleSystem instance) => _instance = instance;
 
         /// <summary>清空单例。切场景 / 退出时调用，让下次重新初始化。</summary>
-        public static void Reset() => _instance = null;
+        /// <remarks>
+        /// ⚠️ 它会**先把写在引擎上的效果撤掉**再断开引用。
+        /// 重力（<c>Physics2D.gravity</c>）、时间倍率（<c>Time.timeScale</c>）这类
+        /// 有引擎全局载体的东西**不会随单例消失而回滚** —— 不清就会跨场景泄漏
+        /// （下一关开局还是反重力 / 2 倍速）。属性管理器同理。
+        /// <para>这里**不广播事件**：拆除期订阅者可能已经被销毁了。</para>
+        /// </remarks>
+        public static void Reset()
+        {
+            if (_instance != null)
+            {
+                // 各规则类的 Clear() 都是幂等的，重复调用无害
+                foreach (var rule in _instance._rules.Values) rule.Clear();
+                _instance._table.ClearAll();
+                _instance._attrs.ResetToDefault();
+            }
+            _instance = null;
+        }
 
         // ==================================================================
         //  字段
@@ -44,6 +62,9 @@ namespace RuleGame.Core.Rules
         private readonly Dictionary<AttributeId, AttributeRuleBase> _rules = new();
         private readonly IRuleCatalog _catalog;
 
+        /// <summary>留着具体类型，好把「时间恒定」的控制入口转出去。</summary>
+        private readonly TimeRule _timeRule;
+
         public IRuleTable        Table      => _table;
         public IAttributeManager Attributes => _attrs;
 
@@ -51,18 +72,54 @@ namespace RuleGame.Core.Rules
         {
             _catalog = catalog ?? throw new ArgumentNullException(nameof(catalog));
 
-            // 7 个属性各注册一个规则类。
+            // 6 个属性各注册一个规则类，属性管理器走**构造函数注入**（决策 2026-10-12）。
             // 未实现的先不注册 —— Request 会因为没有规则类而返回 Undefined。
-            Register(AttributeId.Gravity, new GravityRule());
-            Register(AttributeId.Damage,  new DamageRule());
+            _rules[AttributeId.Gravity]  = new GravityRule(_attrs);
+            _rules[AttributeId.Friction] = new FrictionRule(_attrs);
+            _rules[AttributeId.Mass]     = new MassRule(_attrs);
+            _rules[AttributeId.Damage]   = new DamageRule(_attrs);
+            _rules[AttributeId.Causality] = new CausalityRule(_attrs);
+
+            // 时间规则是唯一带「外部控制入口」的（恒定的回溯按键）。TimeManager /
+            // SnapshotSystem 由它自己懒取单例 —— 后者与 RuleSystem 构造期成环。
+            _timeRule = new TimeRule(_attrs, _table);
+            _rules[AttributeId.Time] = _timeRule;
         }
 
-        /// <summary>注册一个属性规则类，并把属性管理器注入给它。</summary>
-        private void Register(AttributeId attr, AttributeRuleBase rule)
+        // ==================================================================
+        //  主动结束
+        // ==================================================================
+
+        /// <summary>
+        /// 主动结束某个属性当前生效的规则。
+        /// </summary>
+        /// <remarks>
+        /// <para>与「超时 / 被覆盖」共用同一条收尾路径：<c>Clear()</c> → 清槽位 → 广播。
+        /// 所以时间恒定开着的时候取消它，回溯窗口也会被正确关掉。</para>
+        /// <para>该属性本来就没有生效中的规则时返回 false，且**不广播** ——
+        /// 否则 UI 会被空操作刷一遍。</para>
+        /// </remarks>
+        public bool Cancel(AttributeId attr)
         {
-            rule.Bind(_attrs);
-            _rules[attr] = rule;
+            if (!_table.GetSlot(attr).HasValue) return false;
+
+            if (_rules.TryGetValue(attr, out var ruleClass)) ruleClass.Clear();
+            _table.Clear(attr);
+
+            OnRuleExpired?.Invoke(attr);
+            OnRulesChanged?.Invoke();
+            return true;
         }
+
+        // ==================================================================
+        //  ITimeRewindControl（时间恒定的回溯窗口）
+        // ==================================================================
+
+        /// <inheritdoc />
+        public bool IsWindowOpen => _timeRule != null && _timeRule.IsWindowOpen;
+
+        /// <inheritdoc />
+        public bool TryRewind() => _timeRule != null && _timeRule.TryRewind();
 
         // ==================================================================
         //  写入入口
@@ -79,20 +136,47 @@ namespace RuleGame.Core.Rules
             if (!_rules.TryGetValue(attr, out var ruleClass))
                 return RuleRequestResult.Fail(RuleRequestStatus.Undefined);
 
-            // ② 注册（先写状态，让执行期间的查询读到一致数据）
+            // ② 记下旧槽位：覆盖前要清旧状态，失败时要能还原
+            ActiveRule? previous = _table.GetSlot(attr);
+            ActiveRule?[] backup = previous.HasValue ? _table.SnapshotSlots() : null;
+
+            // ③ 覆盖前先让旧关系把世界恢复原样。
+            //    纯写值的规则看不出差别（每次 Request 都会写全自己那几个字段），
+            //    但带外部状态的行为型规则（挂账账本、恒定快照）漏了这步就会泄漏。
+            if (previous.HasValue) ruleClass.Clear();
+
+            // ④ 注册（先写状态，让执行期间的查询读到一致数据）
             _table.Set(attr, rel, def.Duration, source);
 
-            // ③ 执行
+            // ⑤ 执行
             var result = ruleClass.Request(rel);
 
-            // ④ 失败回滚
+            // ⑥ 失败回滚：还原槽位**和**规则类状态，而不是清空。
+            //    清空等于「请求失败反而把原来生效的规则也弄丢了」。
             if (!result.Succeeded)
             {
-                _table.Clear(attr);
+                if (previous.HasValue)
+                {
+                    _table.RestoreSlots(backup);
+                    // 上面 Clear() 已把世界恢复成默认，这里重新应用旧关系盖回去
+                    if (!ruleClass.Request(previous.Value.Relation).Succeeded)
+                    {
+                        UnityEngine.Debug.LogError(
+                            $"[RuleSystem] 回滚 {attr} 到 {previous.Value.Relation} 失败，" +
+                            "该属性的状态可能与规则表不一致。");
+                    }
+                }
+                else
+                {
+                    _table.Clear(attr);
+                    ruleClass.Clear();
+                }
                 return result;
             }
 
-            // ⑤ 广播（状态已写完）
+            // ⑦ 广播（状态已写完）
+            //    旧规则真的没了才报「结束」；失败回滚那条路径上面已经 return 了
+            if (previous.HasValue) OnRuleExpired?.Invoke(attr);
             OnRuleActivated?.Invoke(attr, rel, source);
             OnRulesChanged?.Invoke();
             return result;
@@ -128,10 +212,67 @@ namespace RuleGame.Core.Rules
 
         public void ClearAll()
         {
+            // 先记下哪些属性有规则 —— 清完就读不到了
+            var ended = new List<AttributeId>();
+            foreach (var pair in _table.Slots) ended.Add(pair.Key);
+
             foreach (var rule in _rules.Values) rule.Clear();
             _table.ClearAll();
             _attrs.ResetToDefault();
+
+            // 先写状态，再广播（与 Request 同一条纪律）
+            for (int i = 0; i < ended.Count; i++) OnRuleExpired?.Invoke(ended[i]);
             OnRulesChanged?.Invoke();
+        }
+
+        // ==================================================================
+        //  快照恢复后重建规则效果
+        // ==================================================================
+
+        /// <inheritdoc />
+        /// <remarks>
+        /// <para>快照恢复直接覆盖槽位与属性值，**不发任何规则事件** —— 所以这里必须把
+        /// 「写在引擎上的效果」和「实体身上的值」重新落一遍，否则回溯后会出现
+        /// 「规则表回去了、重力 / 质量 / 摩擦没回去」。</para>
+        /// <para>本方法**不触发规则生命周期事件**，也不广播 <see cref="OnRulesChanged"/>，
+        /// 因此可以安全地在 <c>ISnapshotSystem.Restore</c> 广播 <c>OnRestored</c> 之前调用。</para>
+        /// </remarks>
+        public void ReapplyActiveEffects()
+        {
+            // ① 规则类：按当前槽位静默重施。
+            //    重力 → Physics2D.gravity；时间 → 对齐时间管理器与定点；其余 → AttributeValues。
+            //    ⚠️ 行为型规则覆写了 Reapply（TimeRule 不会在这里再回溯 / 再 Pin）。
+            foreach (var pair in _rules)
+            {
+                pair.Value.Reapply(_table.GetSlot(pair.Key));
+            }
+
+            // ② 实体：活动注册表里能自施加的重读一次属性值。
+            //    质量 / 摩擦没有引擎全局载体，值回去了还要落到刚体与材质上。
+            IWorldRegistry registry = WorldRegistry.Instance;
+            if (registry == null) return;
+
+            IReadOnlyList<IRuleAffected> all = registry.All;
+            for (int i = 0; i < all.Count; i++)
+            {
+                if (all[i] is IRuleApplier applier) applier.ApplyRuleValues();
+            }
+        }
+
+        // ==================================================================
+        //  测试接缝
+        // ==================================================================
+
+        /// <summary>仅测试用：替换某个属性的规则类。</summary>
+        /// <remarks>
+        /// 给验证脚本注入探针用（例如统计 <c>Clear()</c> 被调了几次、
+        /// 或造一个必定失败的规则来验证回滚）。传 null 表示移除。
+        /// 与 <see cref="SetInstanceForTesting"/> 同一个用途。
+        /// </remarks>
+        public void SetRuleForTesting(AttributeId attr, AttributeRuleBase rule)
+        {
+            if (rule == null) _rules.Remove(attr);
+            else _rules[attr] = rule;
         }
 
         public List<string> ExportActiveIds()

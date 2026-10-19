@@ -1,0 +1,124 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 44ae8e38655c9174889977edd694ec6e, type: 3}
+  m_Name: ClockBoss_Definition
+  m_EditorClassIdentifier: RuleGame.Gameplay::RuleGame.Gameplay.Enemy.EnemyDefinition
+  Kind: 2
+  DisplayName: "\u53D1\u6761 Boss"
+  BodySize: {x: 2, y: 3}
+  Health: 150
+  Damage: 22
+  ContactDamage: 1
+  ContactInterval: 0.4
+  ContactPadding: 0.05
+  Energy: 100
+  EnergyRegen: 14
+  RuleAttribute: 1
+  RuleRelation: 3
+  MoveSpeed: 3.4
+  AttackRange: 5.5
+  AttackCooldown: 0.7
+  BossRestDuration: 0.4
+  ClockBeamVolleysBeforeRest: 2
+  BrickAdvanceDuration: 0.9
+  BrickAdvanceSpeedMultiplier: 2.2
+  BrickAdvanceCooldown: 4
+  BrickComboLimit: 2
+  ClockChargeDuration: 3
+  ClockChargeSpeedMultiplier: 4.2
+  ClockChargeCooldown: 3.2
+  ClockBeamWarning: 0.45
+  ClockBeamDuration: 0.55
+  ClockBeamMaxSweepAngle: 90
+  ClockBeamSpread: 14
+  RabbitBurrowDuration: 1
+  RabbitBurrowSpeedMultiplier: 2.8
+  RabbitBurrowCooldown: 5
+  RabbitEscapeDistance: 2.8
+  RabbitBurstCount: 2
+  RabbitBurstInterval: 0.35
+  RabbitRepositionDuration: 2
+  RabbitAimLockLead: 0.35
+  RabbitAirHeight: 2.4
+  RabbitAirMoveDuration: 1.8
+  RabbitAirSpeedMultiplier: 1.6
+  RabbitFanAngle: 18
+  PreferredDistance: 4
+  SpacingTolerance: 0.6
+  RangedRange: 9
+  RetreatSpeedMultiplier: 0.8
+  StaggerDamageThreshold: 45
+  StaggerResetDelay: 1.5
+  HurtCooldown: 5
+  BossHurtDuration: 0.18
+  GravityScale: 1
+  Flying: 0
+  FlightAcceleration: 24
+  BatOrbitDistance: 4.5
+  BatHoverHeight: 3
+  BatDashCooldown: 4
+  BatDashWindup: 0.5
+  BatDashDuration: 0.65
+  BatEvadeCooldown: 2.5
+  BatEvadeDuration: 0.65
+  BatRecoverDuration: 0.45
+  BatApproachDistance: 2.5
+  BatApproachHeight: 0.8
+  BatApproachDuration: 2.4
+  BatApproachSpeedMultiplier: 1.15
+  BatRestHeightRatio: 0.8
+  BatRestPatrolDistance: 2.5
+  BatRestSpeedMultiplier: 0.85
+  ImpactFraction: 0.6
+  RabbitCycle: 20
+  RabbitThrowInterval: 2
+  ClockHourInterval: 0.9
+  ClockMinuteInterval: 0.6
+  ClockSecondInterval: 0.3
+  ClockHourRotationPeriod: 5
+  ClockMinuteRotationPeriod: 3
+  ClockSecondRotationPeriod: 1
+  ClockCoreWindow: 1.15
+  ClockCoreHealth: 15
+  ClockBurstWarning: 0.45
+  ClockBeamWidth: 0.32
+  ClockBeamWidthStep: 0.13
+  ClockBurstInterval: 1.6
+  ClockBurstSpeed: 8.5
+  ProjectileLifetime: 7
+  ClockBurstCount: 24
+  ClockExtraBarrageEnabled: 0
+  ProjectileBudget: 192
+  ClockTimeRuleInterval: 2.2
+  Timings:
+  - Action: Walk
+    Duration: 0.625
+  - Action: Stun
+    Duration: 2.125
+  - Action: Recover
+    Duration: 0.25
+  - Action: Rewind
+    Duration: 2.125
+  - Action: Charge
+    Duration: 3.625
+  - Action: JumpShake
+    Duration: 2.5
+  - Action: Dead
+    Duration: 1.25
+  - Action: Idle
+    Duration: 0.2
+  - Action: Hurt
+    Duration: 0.2
+  - Action: Hand1
+    Duration: 0.2
+  - Action: Hand2
+    Duration: 0.2

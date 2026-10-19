@@ -13,10 +13,19 @@ namespace RuleGame.Infrastructure.Rules
         AttributeValues Values { get; }
 
         void SetFrictionScale(float v);
+        void SetFrictionInverted(bool v);
         void SetMassScale(float v);
+        void SetMassInverted(bool v);
         void SetDamageScale(float v);
         void SetDamageInverted(bool v);
         void SetDamageDisabled(bool v);
+        void SetDamageDeferred(bool v);
+
+        void SetCausalityScale(float v);
+        void SetCausalityInverted(bool v);
+        void SetCausalityRandom(bool v);
+        void SetCausalityRecoveryShared(bool v);
+        void SetCausalitySpread(bool v);
 
         /// <summary>全部恢复默认值。重开关卡 / 规则全清时调用。</summary>
         void ResetToDefault();

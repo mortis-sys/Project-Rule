@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 52227f7ec8ec45948b8a7a8c37cbbc67, type: 3}
   m_Name: DamageEnhance
   m_EditorClassIdentifier: RuleGame.Core::RuleGame.Core.Rules.RuleDef
-  Attribute: 5
+  Attribute: 4
   Relation: 3
   Duration: 10
   ActivationCost: 20

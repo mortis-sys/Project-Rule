@@ -3,7 +3,7 @@ using System.Collections.Generic;
 namespace RuleGame.Infrastructure.Rules
 {
     /// <summary>
-    /// 规则维护表：7 个固定槽位，每属性一个。
+    /// 规则维护表：6 个固定槽位，每属性一个。
     /// 同时是**规则剩余时间的唯一持有者**。
     /// </summary>
     /// <remarks>
