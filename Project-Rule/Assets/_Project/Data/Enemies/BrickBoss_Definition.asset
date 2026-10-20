@@ -15,8 +15,8 @@ MonoBehaviour:
   Kind: 1
   DisplayName: "\u79EF\u6728 Boss"
   BodySize: {x: 2, y: 3.2}
-  Health: 100
-  Damage: 24
+  Health: 200
+  Damage: 8
   ContactDamage: 1
   ContactInterval: 0.4
   ContactPadding: 0.05
@@ -36,6 +36,12 @@ MonoBehaviour:
   BrickThrowSpread: 64
   BrickThrowSpeed: 12
   RabbitLobCount: 1
+  RabbitGroundVolleyCount: 1
+  RabbitGroundMagicInterval: 8
+  RabbitGroundFanCount: 0
+  RabbitGroundFanSpread: 60
+  RabbitGroundFanSpeed: 14
+  RabbitGroundArcStagger: 1
   RabbitLandingSpread: 1.1
   RabbitFanCount: 3
   RabbitFanSpread: 0
@@ -43,8 +49,10 @@ MonoBehaviour:
   BatFanCount: 5
   BatVolleyInterval: 0.25
   BatFanSpread: 48
+  BatFanSpeed: 11
   BatRingCount: 0
   ClockTimeRuleInterval: 0
+  ClockExtraBarrageEnabled: 0
   ClockBurstCount: 0
   ClockBurstInterval: 1.6
   ClockBurstWarning: 0.45
@@ -62,6 +70,7 @@ MonoBehaviour:
   ClockChargeCooldown: 7
   ClockBeamWarning: 0.7
   ClockBeamDuration: 0.35
+  ClockBeamMaxSweepAngle: 90
   ClockBeamSpread: 14
   RabbitBurrowDuration: 1
   RabbitBurrowSpeedMultiplier: 2.8
@@ -113,6 +122,35 @@ MonoBehaviour:
   ClockSecondRotationPeriod: 6
   ClockCoreWindow: 3
   ClockCoreHealth: 15
+  MinionSenseRange: 6
+  MinionPatrolDistance: 3
+  MinionIgnoreDuration: 3
+  MinionLeashRange: 8
+  MinionTargetMemory: 1.5
+  MinionStaggerThreshold: 12
+  MinionHurtDuration: 0.25
+  MinionPreferredRange: 4
+  MinionAimLockFraction: 0.25
+  MinionNavigationEnabled: 1
+  MinionJumpHeight: 1.6
+  MinionMaxDrop: 2.5
+  MinionNavigationSpacing: 0.5
+  MinionRepathInterval: 0.65
+  MinionReassembles: 0
+  MinionRespawnDelay: 7
+  MinionFuseDuration: 1
+  MinionExplosionRadius: 2.5
+  MinionHopInterval: 0.5
+  MinionHopHeight: 2
+  MinionHighHopHeight: 3.2
+  MinionMouseRange: 8
+  MinionMouseCooldown: 3
+  MinionHugDuration: 3
+  MinionHugTickInterval: 1
+  MinionSkillInterval: 5
+  MinionSlideDuration: 1.2
+  MinionDashMultiplier: 3
+  MinionProjectileSpeed: 7
   Timings:
   - Action: Walk
     Duration: 3.125

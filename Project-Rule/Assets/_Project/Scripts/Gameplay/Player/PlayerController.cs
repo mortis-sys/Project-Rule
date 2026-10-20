@@ -147,6 +147,10 @@ namespace RuleGame.Gameplay.Player
         [Tooltip("两次冲刺之间的最小间隔。冲刺进行中再按也无效。")]
         [SerializeField] private float _dashCooldown = 0.25f;
 
+        [Tooltip("冲刺期间免疫伤害。**这是这个实体自己的能力**（序列化字段），敌人配了冲刺也能有。\n" +
+                 "免疫写在本实体自己的 EntityDamageable 上（约束 C4），规则系统与伤害管线不参与判断。")]
+        [SerializeField] private bool _dashInvulnerable = true;
+
         [Header("蹬墙跳")]
         [Tooltip("**贴墙能力总开关**（贴墙下滑 + 蹬墙跳）。这是**这个实体自己的能力**，" +
                  "不是玩家特权 —— 敌人配一下就有、关掉就没有。")]
@@ -182,7 +186,7 @@ namespace RuleGame.Gameplay.Player
         [Header("碰撞")]
         [Tooltip("阻挡移动、并用于接地判定的层。地形与墙体都放这里。")]
         [SerializeField] private LayerMask _solidLayer;
-        [Tooltip("仅阻挡身体移动的层，不授予接地和蹬墙。默认 Enemy（层 9）。")]
+        [Tooltip("仅阻挡身体移动的层，不授予接地和蹬墙。默认 Enemy（层 9）；Boss 在 BossBody 层（12），不挡玩家。")]
         [SerializeField] private LayerMask _bodyBlockLayer = 1 << 9;
 
         [Tooltip("接地探测距离（米）。")]
@@ -651,6 +655,15 @@ namespace RuleGame.Gameplay.Player
             DashSolver.Decision dash = _dash.Advance(tuning, input, contact, _mover.Facing, dt);
             if (dash.Started) OnDashed?.Invoke();
 
+            // ③-免伤：冲刺期间免疫。**写在实体自己的承受方上**，规则系统与伤害管线一行都不改（约束 C4）。
+            // 只在起冲 / 结束两个边沿写，不每帧写 —— 免得把过场（SwingCheckpointCutscene）设置的
+            // 临时无敌覆盖掉。
+            if (_dashInvulnerable && _damageable != null)
+            {
+                if (dash.Started) _damageable.SetInvulnerable(true);
+                else if (dash.JustEnded && !_damageable.IsDead) _damageable.SetInvulnerable(false);
+            }
+
             // ③′ 攻击：轻击连段与重击共用这一个按键，**按意图路由**。
             //
             // ⚠️ 判「意图」而不是「合法性」：下+攻击**就是**一次重击意图，
@@ -1052,7 +1065,14 @@ namespace RuleGame.Gameplay.Player
             _respawnCountdown = _respawnDelay;
 
             // 有 EntityDamageable 就交给它（清死亡标记 + 回满血 + 给无敌）；没有就只补血。
-            if (_damageable != null) _damageable.Revive();
+            if (_damageable != null)
+            {
+                _damageable.Revive();
+                // 冲刺免伤是「起冲置位 / 结束清位」的边沿开关。若在冲刺中被别的路径打死，
+                // 那个位可能还留着 —— 复活时清掉，别把「免伤」带进下一段人生。
+                // Revive() 给的那 1 秒走的是 _invincibleUntil，不受这行影响。
+                _damageable.SetInvulnerable(false);
+            }
             else if (_status != null && _status.Health <= 0f) _status.ApplyHealthDelta(_status.HealthMax);
 
             return true;

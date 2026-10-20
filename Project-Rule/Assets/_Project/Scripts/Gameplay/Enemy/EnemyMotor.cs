@@ -10,7 +10,7 @@ namespace RuleGame.Gameplay.Enemy
     public sealed class EnemyMotor : MonoBehaviour, IKnockbackReceiver, IMomentumSource
     {
         public LayerMask SolidMask = 1 << 8;
-        [Tooltip("仅阻挡身体移动，不作为地面或悬崖支撑。默认 Enemy 层，包含 Boss 与召唤小兵。")]
+        [Tooltip("仅阻挡身体移动，不作为地面或悬崖支撑。默认 Enemy 层（小兵）；Boss 在 BossBody 层，不参与。")]
         public LayerMask BodyBlockMask = 1 << 9;
         public Vector2 Intent { get; set; }
         public float SpeedMultiplier { get; set; } = 1f;

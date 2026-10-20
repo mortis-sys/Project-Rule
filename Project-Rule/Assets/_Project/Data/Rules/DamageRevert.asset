@@ -15,7 +15,7 @@ MonoBehaviour:
   Attribute: 4
   Relation: 0
   Duration: 10
-  ActivationCost: 20
-  Cooldown: 0
-  DisplayName: 攻击变回血
-  Description:
+  ActivationCost: 40
+  Cooldown: 20
+  DisplayName: "\u653B\u51FB\u53D8\u56DE\u8840"
+  Description: 

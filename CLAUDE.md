@@ -101,6 +101,14 @@
   （coyote / buffer / 可变高度）、**多段跳**（`_maxAirJumps`）、**冲刺**（`_dashSpeed` / `_dashDuration` / `_maxDashes`）、
   **贴墙下滑**（`_wallSlideSpeed`）、**蹬墙跳**（`_wallJumpPushSpeed` / `_wallJumpUpSpeed`）。
   每个能力都是**序列化字段 = 实体自己的能力**，不是玩家专属特权（敌人要就有）
+- ✅ **冲刺（2026-10-20 重做）**：`Hero_Dash.anim` 专属剪辑（7 帧 @24fps，不再借 `Push`），
+  速度改成**梯形曲线**（`DashSolver.ResolveDashSpeed`：跑速 → 峰值 → 跑速），
+  `_dashSpeed` 16.4 / `_dashDuration` 0.28 / 斜坡 0.05+0.06 —— **60Hz 下实际距离仍是 4.34 米**
+  （改版前 26 × 0.18 的实际值，不是标称的 4.7；最后一帧计时归零不贡献位移）。
+  表现层 `Presentation/Player/DashAfterimage.cs` 在身后留残影（对象池、暂停冻结、不挡路、不进快照）。
+  ⚠️ **冲刺期间免疫伤害**（`_dashInvulnerable`，默认开，2026-10-21 策划要求）：
+  免疫写在**承受方自己**的 `EntityDamageable.SetInvulnerable` 上，规则系统不做特判（仍是约束 C4）；
+  只在起冲 / 结束两个**边沿**写，避免覆盖过场临时无敌；复活时清位。
 - ✅ **地图组件：平移平台**（`Gameplay/Scene/MovingPlatform.cs`）—— 滑板车 / 升降台 / 巡逻踏板都是它。
   参数：起点 / 终点（**世界坐标**）、速度、**待客往返（默认：站上去才出发 → 到终点 → 回起点停住）** /
   循环往返 / 单程、终点停留、起始进度。白盒用「方块 + 汉字」占位；
@@ -351,6 +359,21 @@
   块本身是 Ground 层实心碰撞体（能站、能挡路），并实现 `IMovingSurface`（站上面会被带走）；
   ⚠️ 激光只做判定、没有碰撞体；⚠️ 不参与时间回溯。
   验（todo）：Play 下把玩家放进光路看冷却 / 击退，再砍短终点确认激光跟墙截断。
+- ✅ **数值测试面板**（`Editor/Testing/NumericTestPanelWindow.cs`；菜单 `Tools/规则游戏/数值测试面板`）——
+  **编辑器窗口，编辑期就能用**，不用进 Play，可以停靠。
+  **Boss 血量**：自动列出场景里 `EnemyDefinition.IsBoss` 的 Boss；「血量总量」直接改**共享的**
+  `EnemyDefinition.Health`（走 Undo）—— 蝙蝠 / 闹钟 Boss 的阶段阈值就是按它算的（×2/3、×1/3，见 `ClampHealth`），
+  所以只改当前血量会被阶段逻辑拉回，**换血池要改总量**。
+  想**只改一个场景**就点「添加场景血量覆盖」：给 Boss 挂 `Development/Testing/BossHealthOverride.cs`
+  （Play 的 `Start` 里应用、销毁时还原，`0` = 不覆盖），填的数字不动共享资产。
+  Play 中还多一个实时血量滑块（直接改 `EntityStatus`）与最近一击的伤害。
+  **Boss 伤害**：同一个区里有「伤害（共享资产）」—— 改 `EnemyDefinition.Damage`，
+  接触 / 近战 / 弹体 / 光束都读它（`EnemyActor` / `EnemyBeam` / `EnemyProjectile` 交给 `CombatSystem` 的基础值）。
+  **规则数值**：按属性折叠，直接改 `RuleDef` 的耗蓝 / 冷却 / 时长（Undo + 标记 dirty）。
+  ⚠️ 工程里有 **3 份 `RuleCatalog`**（正式的 30 条 + 对话实验室 / P4 重力 demo 各 5 条），
+  面板会自动挑规则最全的那份并在「目录」一行显示路径 —— 之前取到对话实验室那份，表现就是「只有重力能改」。
+  **实时数据**（仅 Play）：生效中的规则剩余时间、玩家生命 / 能量 / 冷却。
+  ⚠️ 编辑期改的是资产，**记得 Ctrl+S**（场景与 `RuleDef` / `EnemyDefinition` 都要存）。
 
 ## 已定设计决策（2026-10-12，合并 `mortis-sys/main` 时定）
 

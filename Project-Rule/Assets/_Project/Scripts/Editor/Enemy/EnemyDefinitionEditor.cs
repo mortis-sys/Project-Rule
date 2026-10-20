@@ -48,6 +48,7 @@ namespace RuleGame.Editor.Enemy
             { nameof(EnemyDefinition.BatFanCount), "蝙蝠每轮散射数量" },
             { nameof(EnemyDefinition.BatVolleyInterval), "蝙蝠弹幕间隔（秒）" },
             { nameof(EnemyDefinition.BatFanSpread), "蝙蝠散射总扇角（度）" },
+            { nameof(EnemyDefinition.BatFanSpeed), "蝙蝠散射弹速度" },
             { nameof(EnemyDefinition.BatRingCount), "蝙蝠环形弹数量（0 关闭）" },
             { nameof(EnemyDefinition.ClockTimeRuleInterval), "时钟变速结束后间隔（游戏秒）" },
             { nameof(EnemyDefinition.ClockExtraBarrageEnabled), "默认开启额外环形弹幕" },

@@ -28,6 +28,7 @@ namespace RuleGame.Editor.Enemy
     {
         private const string DataFolder = "Assets/_Project/Data/Enemies";
         private const string PrefabFolder = "Assets/_Project/Prefabs/Enemies";
+        private const string BossLayerName = "BossBody";
         public const string SceneFolder = "Assets/_Project/Scenes/EnemyLabs";
         private static Sprite _square, _circle;
         private static readonly EnemyKind[] LabKinds = new[] { EnemyKind.BrickMinion, EnemyKind.BrickBoss, EnemyKind.ClockBoss, EnemyKind.RabbitBoss, EnemyKind.BatBoss, EnemyKind.BatMinion };
@@ -281,7 +282,9 @@ namespace RuleGame.Editor.Enemy
         }
         private static EnemyActor CreatePrefab(EnemyDefinition definition, EnemyAnimationSet animations)
         {
-            var go = new GameObject(definition.Kind.ToString()); go.layer = 9;
+            var go = new GameObject(definition.Kind.ToString());
+            // Boss 放 BossBody 层：玩家移动只把 Enemy 层当身体阻挡，Boss 不挡路。
+            go.layer = definition.IsBoss ? LayerMask.NameToLayer(BossLayerName) : 9;
             // 与交付 prefab 的基准质量一致；质量反转按参考值 1 取倒数，不能所有 Boss 都填 1。
             var body = go.AddComponent<Rigidbody2D>();
             body.mass = definition.Kind == EnemyKind.BrickBoss ? 12f
@@ -294,6 +297,8 @@ namespace RuleGame.Editor.Enemy
             SetFloat(status, "_energyMax", definition.Energy); SetFloat(status, "_energy", definition.Energy);
             EnemyActor actor = go.AddComponent<EnemyActor>();
             actor.Definition = definition; actor.ProjectileSprite = _circle;
+            // Boss 不把玩家身体当墙：玩家能穿过 Boss，Boss 也不会顶在玩家身上。
+            if (definition.IsBoss) actor.PlayerMask = 0;
             go.AddComponent<RuleAffectedBody>();
             var visual = new GameObject("Visual"); visual.transform.SetParent(go.transform, false);
             visual.transform.localPosition = Vector3.down * definition.BodySize.y * 0.5f;
@@ -316,7 +321,7 @@ namespace RuleGame.Editor.Enemy
             if (definition.Kind == EnemyKind.BatMinion) visual.transform.localScale = Vector3.one * 0.375f;
             if (definition.Kind == EnemyKind.ClockBoss)
             {
-                var core = new GameObject("ClockCore"); core.layer = 9; core.transform.SetParent(go.transform, false);
+                var core = new GameObject("ClockCore"); core.layer = go.layer; core.transform.SetParent(go.transform, false);
                 core.transform.localPosition = Vector3.up * (definition.BodySize.y * 0.5f + 0.3f);
                 core.AddComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Kinematic;
                 var coreCollider = core.AddComponent<BoxCollider2D>();

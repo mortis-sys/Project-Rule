@@ -67,6 +67,7 @@ namespace RuleGame.Gameplay.Enemy
         [Range(3, 21)] public int BatFanCount = 5;
         [Min(.1f)] public float BatVolleyInterval = .25f;
         [Range(10f, 160f)] public float BatFanSpread = 48f;
+        [Min(1f)] public float BatFanSpeed = 11f;
         [Range(0, 48)] public int BatRingCount;
         [Header("时钟变速与齿轮弹幕")]
         [Tooltip("上一条时间规则结束后的间隔（游戏秒）；0 关闭自动变速。时间槽有生效规则时等待，不提前覆盖。")]

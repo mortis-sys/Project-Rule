@@ -210,6 +210,7 @@ MonoBehaviour:
   _dashExitSpeedScale: 1
   _maxDashes: 1
   _dashCooldown: 0.25
+  _dashInvulnerable: 1
   _wallClimbEnabled: 1
   _wallProbeDistance: 0.08
   _wallClimbProbeRadius: 0.06
@@ -233,7 +234,7 @@ MonoBehaviour:
   _knockbackDecay: 30
   _pushStrength: 60
   _pushProbeDistance: 0.15
-  _unlockedAbilities: 15
+  _unlockedAbilities: -1
   _status: {fileID: 5714247369272765345}
   _combat: {fileID: 1882199678892831726}
   _attackDamage: 10
@@ -760,7 +761,7 @@ Transform:
   m_GameObject: {fileID: 3893316903970576085}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -36.940002, y: 2.17, z: -10}
+  m_LocalPosition: {x: 17.6, y: 48.600002, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:

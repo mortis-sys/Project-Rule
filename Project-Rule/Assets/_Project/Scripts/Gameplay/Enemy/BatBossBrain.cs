@@ -187,7 +187,7 @@ namespace RuleGame.Gameplay.Enemy
                     {
                         float sweep = (Pulses & 1) == 0 ? -6f : 6f;
                         Vector2 middle = Quaternion.Euler(0f, 0f, sweep) * Actor.TowardTarget;
-                        Actor.ShootFan(middle, Config.BatFanCount, Config.BatFanSpread, 11f, radius: .24f);
+                        Actor.ShootFan(middle, Config.BatFanCount, Config.BatFanSpread, Config.BatFanSpeed, radius: .24f);
                         if (Pulses == 0 && Config.BatRingCount > 0)
                             Actor.ShootRing(Config.BatRingCount, 6.5f, Age * 17f, .18f);
                         Pulses++;

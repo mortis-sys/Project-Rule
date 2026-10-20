@@ -121,6 +121,7 @@ MonoBehaviour:
   _dashExitSpeedScale: 1
   _maxDashes: 1
   _dashCooldown: 0.25
+  _dashInvulnerable: 1
   _wallClimbEnabled: 1
   _wallProbeDistance: 0.08
   _wallClimbProbeRadius: 0.06
