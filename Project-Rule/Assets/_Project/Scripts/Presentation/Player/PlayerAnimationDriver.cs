@@ -183,6 +183,9 @@ namespace RuleGame.Presentation.Player
             // 旧场景和运行时生成的玩家同样接入，无需逐份修改 Prefab/场景。
             if (_player != null && _player.GetComponent<PlayerAttackVfx>() == null)
                 _player.gameObject.AddComponent<PlayerAttackVfx>();
+
+            if (_player != null && _player.GetComponent<DashAfterimage>() == null)
+                _player.gameObject.AddComponent<DashAfterimage>();
         }
 
         private void OnEnable()
